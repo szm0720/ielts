@@ -18,33 +18,7 @@ const category = ref(localStorage.getItem(CHAPTER_KEY) || chapters[0])
 
 const loaded = ref(false)
 const refVocabulary = reactive(vocabulary)
-const wordList = computed(() => {
-  const result = structuredClone(vocabulary) // deep clone
-  // const keywordValue = keyword.value.trim().toLowerCase()
-  const categoryValue = category.value
 
-  if (categoryValue !== '') {
-    // for (const key in result) {
-    //   if (key !== categoryValue)
-    //     delete result[key]
-    // }
-    return { [categoryValue]: result[categoryValue] }
-  }
-
-  /* if (keywordValue !== '') {
-    for (const key in result) {
-      const category = result[key]
-      const words = []
-      category.words.forEach((group) => {
-        words.push(group.filter((item) => {
-          return item.word.toLowerCase().includes(keywordValue)
-        }))
-      })
-      category.words = words
-    }
-  } */
-  return {}
-})
 
 watch(category, (newVal, oldVal) => {
   // console.log(newVal, oldVal)
@@ -137,13 +111,23 @@ function copyText(item) {
   navigator.clipboard.writeText(text)
 }
 
-function onInputKeydown(e) {
+
+function onInputKeydown(e, item) {
   e.stopPropagation()
-  const { key, target } = e
-  // console.log(key, target.id)
+  const { key } = e
+
   if (key === 'Enter') {
-    // 切换到下一个 input
-    document.getElementById((Number(target.id) + 1).toString())?.focus()
+    document.getElementById((Number(item.id) + 1).toString())?.focus()
+  }
+
+  if (key === 'ArrowUp') {
+    e.preventDefault()
+    play(`vocabulary/audio/${category.value}/${item.word[0]}.mp3`)
+  }
+
+  if (key === 'ArrowDown') {
+    e.preventDefault()
+    item.showSource = !item.showSource
   }
 }
 
@@ -218,19 +202,7 @@ function copyAllError() {
                 {{ k }}
               </option>
             </select>
-            <!-- <input type="text" name="email" class="ml-3 block w-full border border-gray-300 rounded-lg bg-gray-50 p-2.5 text-gray-900 dark:border-gray-600 focus:border-primary-500 dark:bg-gray-700 sm:text-sm dark:text-white focus:ring-primary-500 dark:focus:border-primary-500 dark:focus:ring-primary-500 dark:placeholder-gray-400" placeholder="关键词"> -->
-            <!-- <div class="relative ml-2 flex-1">
-              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <svg class="h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
-                </svg>
-              </div>
-              <input v-model="keyword" type="search"
-                class="block w-full border border-gray-300 rounded-lg bg-gray-50 p-2.5 pl-10 text-sm text-gray-900 dark:border-gray-600 focus:border-blue-500 dark:bg-gray-700 dark:text-white focus:ring-blue-500 dark:focus:border-blue-500 dark:focus:ring-blue-500 dark:placeholder-gray-400"
-                placeholder="Search">
-            </div> -->
+
             <label class="ml-2 inline-flex cursor-pointer items-center">
               <input v-model="isTrainingModel" type="checkbox" class="peer sr-only">
               <div
@@ -336,9 +308,9 @@ function copyAllError() {
                           <input
                             :id="item.id" autocomplete="off" :class="getInputStyleClass(item)"
                             type="text"
-                            @focusout="onInputFoucsOut($event, item)" 
-                            @focusin="onInputFoucsIn($event, `vocabulary/audio/${category}/${item.word[0]}.mp3`)" 
-                            @keydown="onInputKeydown"
+                            @focusout="onInputFoucsOut($event, item)"
+                            @focusin="onInputFoucsIn($event, `vocabulary/audio/${category}/${item.word[0]}.mp3`)"
+                            @keydown="onInputKeydown($event, item)"
                           >
                         </template>
                       </td>
@@ -363,13 +335,13 @@ function copyAllError() {
                         {{ item.pos }}
                       </td>
                       <td class="p-4">
-                        {{ isShowMeaning ? item.meaning : '' }}
+                        {{ isTrainingModel ? (item.showSource ? item.meaning : '') : item.meaning }}
                       </td>
                       <td class="p-4">
-                        {{ isTrainingModel ? '' : item.example }}
+                        {{ isTrainingModel ? (item.showSource ? item.example : '') : item.example }}
                       </td>
                       <td class="p-4">
-                        {{ isTrainingModel ? '' : item.extra }}
+                        {{ isTrainingModel ? (item.showSource ? item.extra : '') : item.extra }}
                       </td>
                     </tr>
                   </template>
