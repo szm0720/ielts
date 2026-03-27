@@ -1,0 +1,6 @@
+{
+  "appId": "com.ielts",
+  "appName": "my-ielts",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}
