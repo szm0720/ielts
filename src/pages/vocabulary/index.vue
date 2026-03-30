@@ -19,7 +19,6 @@ const category = ref(localStorage.getItem(CHAPTER_KEY) || chapters[0])
 const loaded = ref(false)
 const refVocabulary = reactive(vocabulary)
 
-
 watch(category, (newVal, oldVal) => {
   // console.log(newVal, oldVal)
   localStorage.setItem(CHAPTER_KEY, newVal)
@@ -30,10 +29,13 @@ watch(category, (newVal, oldVal) => {
     for (const item of group) {
       item.hiddenByCheck = false
       item.markedRed = false
+      item.showMeaning = false   // 顺便统一一下
     }
   }
-
-  applyProgressToItems(words)
+  // ✅ 等 DOM + 响应式完成
+  nextTick(() => {
+    applyProgressToItems(words)
+  })
 })
 
 function calcStats() {
@@ -46,12 +48,14 @@ function calcStats() {
     for (const group of cur.words) {
       for (const item of group) {
         if (item.spellValue) {
-          if (item.spellError)
+          if (isHistoricalWrong(item)) {
             error++
-          else
+          } else {
             correct++
+          }
+        } else {
+          missing++
         }
-        else { missing++ }
       }
     }
   }
@@ -67,8 +71,9 @@ onMounted(() => {
     audio.onplay = () => {
       for (const _audio of audioTags) {
         _audio.blur()
-        if (audio !== _audio)
+        if (audio !== _audio) {
           _audio.pause()
+        }
       }
     }
   }
@@ -76,8 +81,9 @@ onMounted(() => {
 
 onUpdated(() => {
   // 音频再切换 SRC 之后需要调用一下 load() 不然看不到效果
-  for (const el of document.getElementsByTagName('audio'))
+  for (const el of document.getElementsByTagName('audio')) {
     el.load()
+  }
 })
 
 document.addEventListener('keydown', (ev) => {
@@ -107,6 +113,7 @@ document.addEventListener('keydown', (ev) => {
 })
 
 let audio = null
+
 function play(audioPath) {
   if (audio) {
     audio.pause()
@@ -122,10 +129,9 @@ function copyText(item) {
   navigator.clipboard.writeText(text)
 }
 
-
 function onInputKeydown(e, item) {
   e.stopPropagation()
-  const { key } = e
+  const {key} = e
 
   if (key === 'Enter') {
     document.getElementById((Number(item.id) + 1).toString())?.focus()
@@ -160,23 +166,23 @@ function onInputKeydown(e, item) {
 }
 
 function onInputFoucsIn(e, audioPath) {
-  if (isAutoPlayWordAudio.value)
+  if (isAutoPlayWordAudio.value) {
     play(audioPath)
+  }
 }
 
 function onInputFoucsOut(e, item) {
-  const { target } = e
+  const {target} = e
   const spellValue = target.value.toLowerCase().trim()
   if (spellValue.length < 1) {
     item.spellValue = ''
-    item.spellError = false
-  }
-  else {
+    isHistoricalWrong(item) = false
+  } else {
     item.spellValue = spellValue
 
     const isCorrect = item.word.map(v => v.toLowerCase().trim()).includes(spellValue)
 
-    item.spellError = !isCorrect
+    isHistoricalWrong(item) = !isCorrect
 
     updateProgress(item, isCorrect)   // ✅ 加这一行
   }
@@ -190,10 +196,12 @@ function getInputStyleClass(item) {
     success: 'ml-4 bg-green-50 border border-green-500 text-green-900 dark:text-green-400 placeholder-green-700 dark:placeholder-green-500 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 inline-block p-2.5 dark:bg-gray-700 dark:border-green-500',
   }
   if (isFinishTraining.value) {
-    if (item.spellError)
+    if (isHistoricalWrong(item)) {
       return cls.error
-    if (item.spellValue.length > 0 && !item.spellError)
+    }
+    if (item.spellValue.length > 0 && !isHistoricalWrong(item)) {
       return cls.success
+    }
   }
   return cls.normal
 }
@@ -203,14 +211,13 @@ function copyAllError() {
   const errorWords = []
   for (const group of words) {
     for (const item of group) {
-      if (item.spellError)
+      if (isHistoricalWrong(item)) {
         errorWords.push(`${item.word} ${item.pos} ${item.meaning}`)
+      }
     }
   }
   navigator.clipboard.writeText(errorWords.join('\n\n'))
 }
-
-
 
 const STORAGE_VERSION = 'v1'
 const STORAGE_KEY = `vocabulary_progress_${STORAGE_VERSION}`
@@ -223,8 +230,9 @@ function updateProgress(item, isCorrect) {
   const cat = category.value
   const id = item.id
 
-  if (!progressMap.value[cat])
+  if (!progressMap.value[cat]) {
     progressMap.value[cat] = {}
+  }
 
   if (!progressMap.value[cat][id]) {
     progressMap.value[cat][id] = {
@@ -237,10 +245,11 @@ function updateProgress(item, isCorrect) {
 
   const record = progressMap.value[cat][id]
 
-  if (isCorrect)
+  if (isCorrect) {
     record.correctCount++
-  else
+  } else {
     record.wrongCount++
+  }
 
   record.lastResult = isCorrect ? 'correct' : 'wrong'
   record.lastTime = Date.now()
@@ -255,7 +264,7 @@ function applyProgressToItems(words) {
     for (const item of group) {
       const record = cur[item.id]
       if (record) {
-        item.spellError = record.lastResult === 'wrong'
+        isHistoricalWrong(item) = record.lastResult === 'wrong'
       }
     }
   }
@@ -302,7 +311,10 @@ const displayWords = computed(() => {
   return words
 })
 
-
+function isHistoricalWrong(item) {
+  const record = progressMap.value[category.value]?.[item.id]
+  return record && record.wrongCount > 0
+}
 
 
 </script>
@@ -350,11 +362,11 @@ const displayWords = computed(() => {
                 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300
                 after:transition-all after:content-['']
                 peer-checked:after:translate-x-full peer-checked:after:border-white"
-                          />
-                          <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+              />
+              <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
                 错词练习
               </span>
-              </label>
+            </label>
 
             <label v-if="isTrainingModel" class="ml-2 inline-flex cursor-pointer items-center">
               <input v-model="isShowMeaning" type="checkbox" class="peer sr-only">
@@ -387,166 +399,176 @@ const displayWords = computed(() => {
             <div class="overflow-hidden shadow sm:rounded-lg">
               <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                 <thead class="bg-gray-50 dark:bg-gray-700">
-                  <tr>
-                    <th class="p-4 text-left text-xs font-medium">隐藏</th>
-                    <th class="p-4 text-left text-xs font-medium tracking-wider text-gray-500 dark:text-white">
-                      #
-                    </th>
-                    <th class="p-4 text-xs font-medium tracking-wider text-gray-500 dark:text-white">
-                      <br>
-                    </th>
-                    <th class="p-4 text-left text-xs font-medium tracking-wider text-gray-500 dark:text-white">
-                      词
-                    </th>
-                    <th class="w-0 text-left text-xs font-medium text-gray-500 dark:text-white">
-                      词性
-                    </th>
-                    <th class="p-4 text-left text-xs font-medium tracking-wider text-gray-500 dark:text-white">
-                      词义
-                    </th>
-                    <th class="p-4 text-left text-xs font-medium tracking-wider text-gray-500 dark:text-white">
-                      例句
-                    </th>
-                    <th class="p-4 text-left text-xs font-medium tracking-wider text-gray-500 dark:text-white">
-                      拓展
-                    </th>
-                  </tr>
+                <tr>
+                  <th class="p-4 text-left text-xs font-medium">隐藏</th>
+                  <th class="p-4 text-left text-xs font-medium tracking-wider text-gray-500 dark:text-white">
+                    #
+                  </th>
+                  <th class="p-4 text-xs font-medium tracking-wider text-gray-500 dark:text-white">
+                    <br>
+                  </th>
+                  <th class="p-4 text-left text-xs font-medium tracking-wider text-gray-500 dark:text-white">
+                    词
+                  </th>
+                  <th class="w-0 text-left text-xs font-medium text-gray-500 dark:text-white">
+                    词性
+                  </th>
+                  <th class="p-4 text-left text-xs font-medium tracking-wider text-gray-500 dark:text-white">
+                    词义
+                  </th>
+                  <th class="p-4 text-left text-xs font-medium tracking-wider text-gray-500 dark:text-white">
+                    例句
+                  </th>
+                  <th class="p-4 text-left text-xs font-medium tracking-wider text-gray-500 dark:text-white">
+                    拓展
+                  </th>
+                </tr>
                 </thead>
                 <tbody class="bg-white dark:bg-gray-800">
-                  <tr class="bg-hex-f3f3f3">
-                    <td
-                      colspan="7"
-                      class="px-4 py-6 text-sm font-normal text-gray-900 dark:bg-gray-500 dark:text-white"
-                    >
-                      <div class="flex flex-row">
-                        <div class="flex flex-1 items-center">
-                          <span class="text-lg">{{ category }}</span>
-                          （ {{ refVocabulary[category].groupCount }} 组 {{ refVocabulary[category].wordCount }} 个词 ）
-                        </div>
-                        <div class="justify-items-end">
-                          <audio controls class="chapter">
-                            <source :src="`vocabulary/audio/${refVocabulary[category].audio}`" type="audio/mpeg">
-                          </audio>
-                        </div>
+                <tr class="bg-hex-f3f3f3">
+                  <td
+                    colspan="7"
+                    class="px-4 py-6 text-sm font-normal text-gray-900 dark:bg-gray-500 dark:text-white"
+                  >
+                    <div class="flex flex-row">
+                      <div class="flex flex-1 items-center">
+                        <span class="text-lg">{{ category }}</span>
+                        （ {{ refVocabulary[category].groupCount }} 组 {{ refVocabulary[category].wordCount }} 个词 ）
                       </div>
-                    </td>
-                  </tr>
-                  <template v-for="(wordGroup, i) of displayWords" :key="wordGroup.label">
-                    <tr
-                      v-for="item of wordGroup"
-                      v-show="
+                      <div class="justify-items-end">
+                        <audio controls class="chapter">
+                          <source :src="`vocabulary/audio/${refVocabulary[category].audio}`" type="audio/mpeg">
+                        </audio>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                <template v-for="(wordGroup, i) of displayWords" :key="wordGroup.label">
+                  <tr
+                    v-for="item of wordGroup"
+                    v-show="
                             !item.hiddenByCheck &&
                             (
                               (isTrainingModel
                                 ? (
                                     isErrorTrainingMode
                                       ? isHistoricalWrong(item)
-                                      : (isOnlyShowErrors ? item.spellError : true)
+                                      : (isOnlyShowErrors ? isHistoricalWrong(item) : true)
                                   )
                                 : true
                               )
                             )
                           "
-                      :key="item.id"
-                      :class="[
-                              item.markedRed ? 'bg-red-100 dark:bg-red-900' : '',
+                    :key="item.id"
+                    :class="[
+                              // ① 先放基础行颜色
+                              item.id % 2 === 0 ? 'bg-gray-50 dark:bg-gray-700' : '',
 
-                              // ✅ 新增：非练习模式 + 历史错词 → 高亮
+                              // ② 再放错词高亮
                               (!isTrainingModel && isHistoricalWrong(item))
                                 ? 'bg-red-50 dark:bg-red-800'
                                 : '',
 
-                              item.id % 2 === 0 ? 'bg-gray-50 dark:bg-gray-700' : '',
+                              // ③ 最后放“手动标红”（最高优先级）
+                              item.markedRed ? 'bg-red-100 dark:bg-red-900' : '',
+
                               `group-color-${i % 15}`
                             ]"
-                      class="text-sm text-gray-900 dark:text-white"
-                    >
-                      <td class="p-4 flex items-center gap-2">
-                        <!-- 隐藏 -->
-                        <input type="checkbox" v-model="item.hiddenByCheck">
+                    class="text-sm text-gray-900 dark:text-white"
+                  >
+                    <td class="p-4 flex items-center gap-2">
+                      <!-- 隐藏 -->
+                      <input type="checkbox" v-model="item.hiddenByCheck">
 
-                        <!-- 标红按钮 -->
-                        <i
-                          class="i-ph-flag-fill cursor-pointer"
-                          :class="item.markedRed ? 'text-red-500' : 'text-gray-400'"
-                          @click="item.markedRed = !item.markedRed"
-                        />
-                      </td>
-                      <td class="p-4">
-                        {{ item.id }}
-                      </td>
-                      <td>
-                        <i
-                          class="i-ph-speaker-simple-high-bold inline-block cursor-pointer"
-                          @click="play(`vocabulary/audio/${category}/${item.word[0]}.mp3`)"
-                        />
+                      <!-- 标红按钮 -->
+                      <i
+                        class="i-ph-flag-fill cursor-pointer"
+                        :class="item.markedRed ? 'text-red-500' : 'text-gray-400'"
+                        @click="item.markedRed = !item.markedRed"
+                      />
+                    </td>
+                    <td class="p-4">
+                      {{ item.id }}
+                    </td>
+                    <td>
+                      <i
+                        class="i-ph-speaker-simple-high-bold inline-block cursor-pointer"
 
-                        <template v-if="isTrainingModel">
-                          <i
-                            :class="`${item.showSource ? 'i-ph-eye-slash-bold' : 'i-ph-eye-bold'} inline-block cursor-pointer ml-4`"
-                            title="显示原词" @click="item.showSource = !item.showSource"
-                          />
-                          <input
-                            :id="item.id" autocomplete="off" :class="getInputStyleClass(item)"
-                            type="text"
-                            @focusout="onInputFoucsOut($event, item)"
-                            @focusin="onInputFoucsIn($event, `vocabulary/audio/${category}/${item.word[0]}.mp3`)"
-                            @keydown="onInputKeydown($event, item)"
+                        @click.stop="play(`vocabulary/audio/${category}/${item.word[0]}.mp3`)"
+
+                      />
+
+                      <template v-if="isTrainingModel">
+                        <i
+                          :class="`${item.showSource ? 'i-ph-eye-slash-bold' : 'i-ph-eye-bold'} inline-block cursor-pointer ml-4`"
+                          title="显示原词"
+
+                          @click.stop="item.showMeaning = !item.showMeaning"
+
+                        />
+                        <input
+                          :id="item.id" autocomplete="off" :class="getInputStyleClass(item)"
+                          type="text"
+                          @focusout="onInputFoucsOut($event, item)"
+                          @focusin="onInputFoucsIn($event, `vocabulary/audio/${category}/${item.word[0]}.mp3`)"
+                          @keydown="onInputKeydown($event, item)"
+                        >
+                      </template>
+                    </td>
+                    <td class="group relative whitespace-nowrap p-4">
+                      <div
+                        v-if="!isTrainingModel || item.showSource || (isTrainingModel && isOnlyShowErrors && isHistoricalWrong(item)) || isShowSource"
+                      >
+
+                        <div class="flex items-center">
+                          <!-- 单词 -->
+                          <div>
+                            <p v-for="w in item.word" :key="w">
+                              <a
+                                class="hover:underline"
+                                :title="`在剑桥词典中查询 ${w}`"
+                                target="_blank"
+                                :href="`https://dictionary.cambridge.org/dictionary/english-chinese-simplified/${w}`"
+                              >
+                                {{ w }}
+                              </a>
+                            </p>
+                          </div>
+
+                          <!-- 🔥 错词强度 -->
+                          <span
+                            v-if="!isTrainingModel && getWrongLevel(item) > 0"
+                            class="ml-2 text-xs text-red-500"
                           >
-                        </template>
-                      </td>
-                      <td class="group relative whitespace-nowrap p-4">
-                        <div v-if="!isTrainingModel || item.showSource || (isTrainingModel && isOnlyShowErrors && item.spellError) || isShowSource">
-
-                          <div class="flex items-center">
-                            <!-- 单词 -->
-                            <div>
-                              <p v-for="w in item.word" :key="w">
-                                <a
-                                  class="hover:underline"
-                                  :title="`在剑桥词典中查询 ${w}`"
-                                  target="_blank"
-                                  :href="`https://dictionary.cambridge.org/dictionary/english-chinese-simplified/${w}`"
-                                >
-                                  {{ w }}
-                                </a>
-                              </p>
-                            </div>
-
-                            <!-- 🔥 错词强度 -->
-                            <span
-                              v-if="!isTrainingModel && getWrongLevel(item) > 0"
-                              class="ml-2 text-xs text-red-500"
-                            >
                             🔥{{ getWrongLevel(item) }}
                           </span>
-                          </div>
-
-                          <!-- 复制按钮 -->
-                          <div
-                            class="absolute right-0 top-0 hidden h-100% items-center group-hover:flex"
-                            @click="copyText(item)"
-                          >
-                            <i class="i-ph-copy block cursor-pointer px-4" />
-                          </div>
                         </div>
-                      </td>
+
+                        <!-- 复制按钮 -->
+                        <div
+                          class="absolute right-0 top-0 hidden h-100% items-center group-hover:flex"
+                          @click.stop="copyText(item)"
+                        >
+                          <i class="i-ph-copy block cursor-pointer px-4"/>
+                        </div>
+                      </div>
+                    </td>
 
 
-                      <td style="font-style: italic; font-family: times;">
-                        {{ item.pos }}
-                      </td>
-                      <td class="p-4">
-                        {{ isTrainingModel ? (item.showSource ? item.meaning : '') : item.meaning }}
-                      </td>
-                      <td class="p-4">
-                        {{ isTrainingModel ? (item.showSource ? item.example : '') : item.example }}
-                      </td>
-                      <td class="p-4 whitespace-pre-line">
-                        {{ isTrainingModel ? (item.showSource ? item.extra : '') : item.extra }}
-                      </td>
-                    </tr>
-                  </template>
+                    <td style="font-style: italic; font-family: times;">
+                      {{ item.pos }}
+                    </td>
+                    <td class="p-4">
+                      {{ isTrainingModel ? (item.showSource ? item.meaning : '') : item.meaning }}
+                    </td>
+                    <td class="p-4">
+                      {{ isTrainingModel ? (item.showSource ? item.example : '') : item.example }}
+                    </td>
+                    <td class="p-4 whitespace-pre-line">
+                      {{ isTrainingModel ? (item.showSource ? item.extra : '') : item.extra }}
+                    </td>
+                  </tr>
+                </template>
                 </tbody>
               </table>
             </div>
