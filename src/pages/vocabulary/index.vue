@@ -38,6 +38,10 @@ watch(category, (newVal, oldVal) => {
   })
 })
 
+function  test(){
+  let test2="do you see"
+}
+
 function calcStats() {
   let error = 0
   let missing = 0
@@ -289,25 +293,37 @@ const isErrorTrainingMode = ref(false)
 const displayWords = computed(() => {
   const words = refVocabulary[category.value].words
 
-  // 🔴 错词训练模式
-  if (isTrainingModel.value && isErrorTrainingMode.value) {
-    const all = []
-
-    for (const group of words) {
-      for (const item of group) {
-        if (isHistoricalWrong(item)) {
-          all.push(item)
-        }
-      }
+  // 👉 扁平化（用于处理）
+  const flat = []
+  for (const group of words) {
+    for (const item of group) {
+      flat.push(item)
     }
-
-    // 按错误次数排序
-    return [
-      all.sort((a, b) => getWrongLevel(b) - getWrongLevel(a))
-    ]
   }
 
-  // 🟢 默认模式（保持原结构）
+  // 🟢 非练习模式 → 原样返回
+  if (!isTrainingModel.value) {
+    return words
+  }
+
+  // 🔴 错词训练模式
+  if (isErrorTrainingMode.value) {
+    const filtered = flat.filter(item => isHistoricalWrong(item))
+
+    const sorted = [...filtered].sort(
+      (a, b) => getWrongLevel(b) - getWrongLevel(a)
+    )
+
+    return [sorted]
+  }
+
+  // 🟡 普通练习模式
+  if (isOnlyShowErrors.value) {
+    const filtered = flat.filter(item => isHistoricalWrong(item))
+    return [filtered]
+  }
+
+  // 🟢 默认练习模式（保持原结构）
   return words
 })
 
@@ -446,19 +462,7 @@ function isHistoricalWrong(item) {
                 <template v-for="(wordGroup, i) of displayWords" :key="wordGroup.label">
                   <tr
                     v-for="item of wordGroup"
-                    v-show="
-                            !item.hiddenByCheck &&
-                            (
-                              (isTrainingModel
-                                ? (
-                                    isErrorTrainingMode
-                                      ? isHistoricalWrong(item)
-                                      : (isOnlyShowErrors ? isHistoricalWrong(item) : true)
-                                  )
-                                : true
-                              )
-                            )
-                          "
+                    v-show="!item.hiddenByCheck"
                     :key="item.id"
                     :class="[
                               // ① 先放基础行颜色
