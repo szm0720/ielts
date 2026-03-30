@@ -17791,7 +17791,7 @@ const vocabulary = {
       "pos": "n.",
       "meaning": "炉子",
       "example": "Please warm up this milk over the stove",
-      "extra": "-"
+      "extra": "over the stove：在炉子上"
     }, {
       "id": 1769,
       "spellError": false,
@@ -17961,7 +17961,7 @@ const vocabulary = {
       "pos": "adj./v.",
       "meaning": "清醒的/（使）醒酒",
       "example": "He was tipsy yesterday, but now he is sober",
-      "extra": "sober up （使）醒酒"
+      "extra": "tipsy：微醉的、有点喝醉的（程度较轻）\nsober up （使）醒酒"
     }], [{
       "id": 1786,
       "spellError": false,
@@ -18021,7 +18021,7 @@ const vocabulary = {
       "pos": "n.",
       "meaning": "黄瓜",
       "example": "I would like a cucumber salad for an appetizer",
-      "extra": "-"
+      "extra": "for an appetizer：作为开胃菜\n"
     }], [{
       "id": 1792,
       "spellError": false,
@@ -18231,7 +18231,10 @@ const vocabulary = {
       "pos": "n.",
       "meaning": "瓜、甜瓜",
       "example": "We garnished the melon with strawberries",
-      "extra": "-"
+      "extra": "garnish v. 给（食物）加装饰、配菜\n" +
+        "melon n. 甜瓜、瓜\n" +
+        "strawberry n. 草莓\n" +
+        "句型：garnish A with B → 用 B 装饰 / 点缀 A。"
     }, {
       "id": 1813,
       "spellError": false,
@@ -18321,7 +18324,8 @@ const vocabulary = {
       "pos": "n.",
       "meaning": "麦片粥",
       "example": "She spooned out bowls of porridge",
-      "extra": "-"
+      "extra": "spooned out：动词短语，用勺子舀出、盛出\n" +
+        "bowls of porridge：几碗粥 / 麦片粥"
     }, {
       "id": 1822,
       "spellError": false,
@@ -18401,7 +18405,7 @@ const vocabulary = {
       "pos": "n.",
       "meaning": "香肠",
       "example": "She loves sausage and mash",
-      "extra": "-"
+      "extra": "mash：这里是 mashed potato 的简写，指土豆泥\n"
     }], [{
       "id": 1830,
       "spellError": false,
@@ -18581,7 +18585,14 @@ const vocabulary = {
       "pos": "n.",
       "meaning": "汤",
       "example": "He had spoiled the soup by putting in too much salt",
-      "extra": "-"
+      "extra": "时态\n" +
+        "had spoiled：过去完成时，表示 “在过去某个时间之前就已经把汤毁了”。\n" +
+        "核心词汇\n" +
+        "spoil：弄坏、糟蹋、（食物）变质\n" +
+        "put in too much salt：放了太多盐\n" +
+        "结构\n" +
+        "by doing sth.：通过做某事（表示原因 / 方式）\n" +
+        "→ 整句意思：他因为放了太多盐，把汤给毁了。"
     }], [{
       "id": 1848,
       "spellError": false,
@@ -18591,7 +18602,7 @@ const vocabulary = {
       "pos": "n.",
       "meaning": "布丁",
       "example": "Let the pudding chill for an hour",
-      "extra": "-"
+      "extra": "chill：（动词）冷却、冷藏、冰镇"
     }, {
       "id": 1849,
       "spellError": false,

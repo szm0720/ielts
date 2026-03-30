@@ -32,6 +32,8 @@ watch(category, (newVal, oldVal) => {
       item.markedRed = false
     }
   }
+
+  applyProgressToItems(words)
 })
 
 function calcStats() {
@@ -171,7 +173,12 @@ function onInputFoucsOut(e, item) {
   }
   else {
     item.spellValue = spellValue
-    item.spellError = !item.word.map(v => v.toLowerCase().trim()).includes(spellValue)
+
+    const isCorrect = item.word.map(v => v.toLowerCase().trim()).includes(spellValue)
+
+    item.spellError = !isCorrect
+
+    updateProgress(item, isCorrect)   // ✅ 加这一行
   }
   trainingStats.value = calcStats()
 }
@@ -202,6 +209,102 @@ function copyAllError() {
   }
   navigator.clipboard.writeText(errorWords.join('\n\n'))
 }
+
+
+
+const STORAGE_VERSION = 'v1'
+const STORAGE_KEY = `vocabulary_progress_${STORAGE_VERSION}`
+
+const progressMap = ref(
+  JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+)
+
+function updateProgress(item, isCorrect) {
+  const cat = category.value
+  const id = item.id
+
+  if (!progressMap.value[cat])
+    progressMap.value[cat] = {}
+
+  if (!progressMap.value[cat][id]) {
+    progressMap.value[cat][id] = {
+      wrongCount: 0,
+      correctCount: 0,
+      lastResult: '',
+      lastTime: 0
+    }
+  }
+
+  const record = progressMap.value[cat][id]
+
+  if (isCorrect)
+    record.correctCount++
+  else
+    record.wrongCount++
+
+  record.lastResult = isCorrect ? 'correct' : 'wrong'
+  record.lastTime = Date.now()
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(progressMap.value))
+}
+
+function applyProgressToItems(words) {
+  const cur = progressMap.value[category.value] || {}
+
+  for (const group of words) {
+    for (const item of group) {
+      const record = cur[item.id]
+      if (record) {
+        item.spellError = record.lastResult === 'wrong'
+      }
+    }
+  }
+}
+
+function getRecord(item) {
+  return progressMap.value[category.value]?.[item.id]
+}
+
+function getWrongLevel(item) {
+  const record = getRecord(item)
+  return record ? record.wrongCount : 0
+}
+
+function isHistoricalWrong(item) {
+  const record = getRecord(item)
+  return record && record.wrongCount > 0
+}
+
+const isErrorTrainingMode = ref(false)
+
+const displayWords = computed(() => {
+  const words = refVocabulary[category.value].words
+
+  // 🔴 错词训练模式
+  if (isTrainingModel.value && isErrorTrainingMode.value) {
+    const all = []
+
+    for (const group of words) {
+      for (const item of group) {
+        if (isHistoricalWrong(item)) {
+          all.push(item)
+        }
+      }
+    }
+
+    // 按错误次数排序
+    return [
+      all.sort((a, b) => getWrongLevel(b) - getWrongLevel(a))
+    ]
+  }
+
+  // 🟢 默认模式（保持原结构）
+  return words
+})
+
+
+
+
 </script>
 
 <template>
@@ -236,6 +339,23 @@ function copyAllError() {
               />
               <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">练习模式</span>
             </label>
+
+            <label v-if="isTrainingModel" class="ml-2 inline-flex cursor-pointer items-center">
+              <input v-model="isErrorTrainingMode" type="checkbox" class="peer sr-only">
+              <div
+                class="peer relative h-6 w-11 rounded-full bg-gray-200
+                after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5
+                after:border after:border-gray-300 dark:border-gray-600 after:rounded-full
+                after:bg-white dark:bg-gray-700 peer-checked:bg-red-600
+                peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300
+                after:transition-all after:content-['']
+                peer-checked:after:translate-x-full peer-checked:after:border-white"
+                          />
+                          <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+                错词练习
+              </span>
+              </label>
+
             <label v-if="isTrainingModel" class="ml-2 inline-flex cursor-pointer items-center">
               <input v-model="isShowMeaning" type="checkbox" class="peer sr-only">
               <div
@@ -311,12 +431,35 @@ function copyAllError() {
                       </div>
                     </td>
                   </tr>
-                  <template v-for="(wordGroup, i) of refVocabulary[category].words" :key="wordGroup.label">
+                  <template v-for="(wordGroup, i) of displayWords" :key="wordGroup.label">
                     <tr
                       v-for="item of wordGroup"
-                      v-show="!item.hiddenByCheck && ((isTrainingModel && (isOnlyShowErrors ? item.spellError : true)) || !isTrainingModel)"
+                      v-show="
+                            !item.hiddenByCheck &&
+                            (
+                              (isTrainingModel
+                                ? (
+                                    isErrorTrainingMode
+                                      ? isHistoricalWrong(item)
+                                      : (isOnlyShowErrors ? item.spellError : true)
+                                  )
+                                : true
+                              )
+                            )
+                          "
                       :key="item.id"
-                      :class="[  item.markedRed ? 'bg-red-100 dark:bg-red-900' : '',  item.id % 2 === 0 ? 'bg-gray-50 dark:bg-gray-700' : '',  `group-color-${i % 15}`]" class="text-sm text-gray-900 dark:text-white"
+                      :class="[
+                              item.markedRed ? 'bg-red-100 dark:bg-red-900' : '',
+
+                              // ✅ 新增：非练习模式 + 历史错词 → 高亮
+                              (!isTrainingModel && isHistoricalWrong(item))
+                                ? 'bg-red-50 dark:bg-red-800'
+                                : '',
+
+                              item.id % 2 === 0 ? 'bg-gray-50 dark:bg-gray-700' : '',
+                              `group-color-${i % 15}`
+                            ]"
+                      class="text-sm text-gray-900 dark:text-white"
                     >
                       <td class="p-4 flex items-center gap-2">
                         <!-- 隐藏 -->
@@ -354,13 +497,32 @@ function copyAllError() {
                       </td>
                       <td class="group relative whitespace-nowrap p-4">
                         <div v-if="!isTrainingModel || item.showSource || (isTrainingModel && isOnlyShowErrors && item.spellError) || isShowSource">
-                          <p v-for="w in item.word" :key="w">
-                            <a
-                              class="hover:underline" :title="`在剑桥词典中查询 ${w}`" target="_blank"
-                              :href="`https://dictionary.cambridge.org/dictionary/english-chinese-simplified/${w}`"
-                            >{{ w }}</a>
-                          </p>
 
+                          <div class="flex items-center">
+                            <!-- 单词 -->
+                            <div>
+                              <p v-for="w in item.word" :key="w">
+                                <a
+                                  class="hover:underline"
+                                  :title="`在剑桥词典中查询 ${w}`"
+                                  target="_blank"
+                                  :href="`https://dictionary.cambridge.org/dictionary/english-chinese-simplified/${w}`"
+                                >
+                                  {{ w }}
+                                </a>
+                              </p>
+                            </div>
+
+                            <!-- 🔥 错词强度 -->
+                            <span
+                              v-if="!isTrainingModel && getWrongLevel(item) > 0"
+                              class="ml-2 text-xs text-red-500"
+                            >
+                            🔥{{ getWrongLevel(item) }}
+                          </span>
+                          </div>
+
+                          <!-- 复制按钮 -->
                           <div
                             class="absolute right-0 top-0 hidden h-100% items-center group-hover:flex"
                             @click="copyText(item)"
@@ -369,6 +531,8 @@ function copyAllError() {
                           </div>
                         </div>
                       </td>
+
+
                       <td style="font-style: italic; font-family: times;">
                         {{ item.pos }}
                       </td>
