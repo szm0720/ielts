@@ -5,7 +5,7 @@ import vocabulary from './vocabulary'
 const CHAPTER_KEY = 'vocabulary_chapter'
 
 const isTrainingModel = ref(false)
-const isShowMeaning = ref(true)
+const isShowMeaning = ref(false)
 const isAutoPlayWordAudio = ref(true)
 const isOnlyShowErrors = ref(false)
 const isFinishTraining = ref(false)
@@ -19,6 +19,7 @@ const category = ref(localStorage.getItem(CHAPTER_KEY) || chapters[0])
 const loaded = ref(false)
 const refVocabulary = reactive(vocabulary)
 
+
 watch(category, (newVal, oldVal) => {
   // console.log(newVal, oldVal)
   localStorage.setItem(CHAPTER_KEY, newVal)
@@ -29,18 +30,17 @@ watch(category, (newVal, oldVal) => {
     for (const item of group) {
       item.hiddenByCheck = false
       item.markedRed = false
-      item.showMeaning = false   // 顺便统一一下
+      item.showExample = false
+      item.showExtra = false
     }
   }
-  // ✅ 等 DOM + 响应式完成
+
   nextTick(() => {
     applyProgressToItems(words)
   })
 })
 
-function  test(){
-  let test2="do you see"
-}
+
 
 function calcStats() {
   let error = 0
@@ -52,14 +52,12 @@ function calcStats() {
     for (const group of cur.words) {
       for (const item of group) {
         if (item.spellValue) {
-          if (isHistoricalWrong(item)) {
+          if (isHistoricalWrong(item))
             error++
-          } else {
+          else
             correct++
-          }
-        } else {
-          missing++
         }
+        else { missing++ }
       }
     }
   }
@@ -75,9 +73,8 @@ onMounted(() => {
     audio.onplay = () => {
       for (const _audio of audioTags) {
         _audio.blur()
-        if (audio !== _audio) {
+        if (audio !== _audio)
           _audio.pause()
-        }
       }
     }
   }
@@ -85,9 +82,8 @@ onMounted(() => {
 
 onUpdated(() => {
   // 音频再切换 SRC 之后需要调用一下 load() 不然看不到效果
-  for (const el of document.getElementsByTagName('audio')) {
+  for (const el of document.getElementsByTagName('audio'))
     el.load()
-  }
 })
 
 document.addEventListener('keydown', (ev) => {
@@ -117,7 +113,6 @@ document.addEventListener('keydown', (ev) => {
 })
 
 let audio = null
-
 function play(audioPath) {
   if (audio) {
     audio.pause()
@@ -133,12 +128,48 @@ function copyText(item) {
   navigator.clipboard.writeText(text)
 }
 
-function onInputKeydown(e, item) {
+
+function onInputKeydown(e, item, index, wordGroup) {
   e.stopPropagation()
-  const {key} = e
+  const { key } = e
 
   if (key === 'Enter') {
-    document.getElementById((Number(item.id) + 1).toString())?.focus()
+    e.preventDefault()
+
+    let nextIndex = index + 1
+
+    // 👉 跳过隐藏项（关键优化）
+    while (nextIndex < wordGroup.length) {
+      if (!wordGroup[nextIndex].hiddenByCheck) break
+      nextIndex++
+    }
+
+    const nextItem = wordGroup[nextIndex]
+
+    if (nextItem) {
+      nextTick(() => {
+        document.getElementById(nextItem.id)?.focus()
+      })
+    }
+  }
+
+  if (key === 'Enter' && e.shiftKey) {
+    e.preventDefault()
+
+    let prevIndex = index - 1
+
+    while (prevIndex >= 0) {
+      if (!wordGroup[prevIndex].hiddenByCheck) break
+      prevIndex--
+    }
+
+    const prevItem = wordGroup[prevIndex]
+
+    if (prevItem) {
+      nextTick(() => {
+        document.getElementById(prevItem.id)?.focus()
+      })
+    }
   }
 
   if (key === 'ArrowUp') {
@@ -148,7 +179,10 @@ function onInputKeydown(e, item) {
 
   if (key === 'ArrowDown') {
     e.preventDefault()
-    item.showSource = !item.showSource
+
+    item.showSource = true
+    item.showExample = true
+    item.showExtra = true
   }
 
   if (key === 'ArrowLeft') {
@@ -170,23 +204,23 @@ function onInputKeydown(e, item) {
 }
 
 function onInputFoucsIn(e, audioPath) {
-  if (isAutoPlayWordAudio.value) {
+  if (isAutoPlayWordAudio.value)
     play(audioPath)
-  }
 }
 
 function onInputFoucsOut(e, item) {
-  const {target} = e
+  const { target } = e
   const spellValue = target.value.toLowerCase().trim()
   if (spellValue.length < 1) {
     item.spellValue = ''
-    isHistoricalWrong(item) = false
-  } else {
+    item.spellError = false
+  }
+  else {
     item.spellValue = spellValue
 
     const isCorrect = item.word.map(v => v.toLowerCase().trim()).includes(spellValue)
 
-    isHistoricalWrong(item) = !isCorrect
+    item.spellError = !isCorrect
 
     updateProgress(item, isCorrect)   // ✅ 加这一行
   }
@@ -200,12 +234,10 @@ function getInputStyleClass(item) {
     success: 'ml-4 bg-green-50 border border-green-500 text-green-900 dark:text-green-400 placeholder-green-700 dark:placeholder-green-500 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 inline-block p-2.5 dark:bg-gray-700 dark:border-green-500',
   }
   if (isFinishTraining.value) {
-    if (isHistoricalWrong(item)) {
+    if (item.spellError)
       return cls.error
-    }
-    if (item.spellValue.length > 0 && !isHistoricalWrong(item)) {
+    if (item.spellValue.length > 0 && !item.spellError)
       return cls.success
-    }
   }
   return cls.normal
 }
@@ -215,13 +247,14 @@ function copyAllError() {
   const errorWords = []
   for (const group of words) {
     for (const item of group) {
-      if (isHistoricalWrong(item)) {
+      if (item.spellError)
         errorWords.push(`${item.word} ${item.pos} ${item.meaning}`)
-      }
     }
   }
   navigator.clipboard.writeText(errorWords.join('\n\n'))
 }
+
+
 
 const STORAGE_VERSION = 'v1'
 const STORAGE_KEY = `vocabulary_progress_${STORAGE_VERSION}`
@@ -234,9 +267,8 @@ function updateProgress(item, isCorrect) {
   const cat = category.value
   const id = item.id
 
-  if (!progressMap.value[cat]) {
+  if (!progressMap.value[cat])
     progressMap.value[cat] = {}
-  }
 
   if (!progressMap.value[cat][id]) {
     progressMap.value[cat][id] = {
@@ -249,11 +281,10 @@ function updateProgress(item, isCorrect) {
 
   const record = progressMap.value[cat][id]
 
-  if (isCorrect) {
+  if (isCorrect)
     record.correctCount++
-  } else {
+  else
     record.wrongCount++
-  }
 
   record.lastResult = isCorrect ? 'correct' : 'wrong'
   record.lastTime = Date.now()
@@ -262,16 +293,7 @@ function updateProgress(item, isCorrect) {
 }
 
 function applyProgressToItems(words) {
-  const cur = progressMap.value[category.value] || {}
 
-  for (const group of words) {
-    for (const item of group) {
-      const record = cur[item.id]
-      if (record) {
-        isHistoricalWrong(item) = record.lastResult === 'wrong'
-      }
-    }
-  }
 }
 
 function getRecord(item) {
@@ -293,7 +315,7 @@ const isErrorTrainingMode = ref(false)
 const displayWords = computed(() => {
   const words = refVocabulary[category.value].words
 
-  // 👉 扁平化（用于处理）
+  // 👉 扁平化
   const flat = []
   for (const group of words) {
     for (const item of group) {
@@ -301,37 +323,63 @@ const displayWords = computed(() => {
     }
   }
 
-  // 🟢 非练习模式 → 原样返回
+  // 🟢 非练习模式
   if (!isTrainingModel.value) {
     return words
   }
 
-  // 🔴 错词训练模式
+  // 🔴 错词训练模式（排序）
   if (isErrorTrainingMode.value) {
     const filtered = flat.filter(item => isHistoricalWrong(item))
-
-    const sorted = [...filtered].sort(
-      (a, b) => getWrongLevel(b) - getWrongLevel(a)
-    )
-
-    return [sorted]
+    return [[...filtered].sort((a, b) => getWrongLevel(b) - getWrongLevel(a))]
   }
 
-  // 🟡 普通练习模式
+  // 🟡 仅错词（不排序）
   if (isOnlyShowErrors.value) {
     const filtered = flat.filter(item => isHistoricalWrong(item))
     return [filtered]
   }
 
-  // 🟢 默认练习模式（保持原结构）
+  // 🟢 默认
   return words
 })
 
-function isHistoricalWrong(item) {
-  const record = progressMap.value[category.value]?.[item.id]
-  return record && record.wrongCount > 0
+watch(isErrorTrainingMode, () => {
+  const words = refVocabulary[category.value].words
+
+  for (const group of words) {
+    for (const item of group) {
+      item.hiddenByCheck = false
+      item.showSource = false
+    }
+  }
+})
+
+watch(isTrainingModel, (val) => {
+  if (val) {
+    isShowMeaning.value = false
+  }
+})
+
+function toggleHint(item) {
+  item.showSource = true
+  item.showExample = true
+  item.showExtra = true
 }
 
+
+watch(isErrorTrainingMode, () => {
+  const words = refVocabulary[category.value].words
+
+  for (const group of words) {
+    for (const item of group) {
+      item.hiddenByCheck = false
+      item.showSource = false
+      item.showExample = false
+      item.showExtra = false
+    }
+  }
+})
 
 </script>
 
@@ -459,25 +507,22 @@ function isHistoricalWrong(item) {
                     </div>
                   </td>
                 </tr>
-                <template v-for="(wordGroup, i) of displayWords" :key="wordGroup.label">
+                <template v-for="(wordGroup, i) of displayWords" :key="i">
                   <tr
-                    v-for="item of wordGroup"
+                    v-for="(item, index) of wordGroup"
                     v-show="!item.hiddenByCheck"
                     :key="item.id"
                     :class="[
-                              // ① 先放基础行颜色
-                              item.id % 2 === 0 ? 'bg-gray-50 dark:bg-gray-700' : '',
+                            item.id % 2 === 0 ? 'bg-gray-50 dark:bg-gray-700' : '',
 
-                              // ② 再放错词高亮
-                              (!isTrainingModel && isHistoricalWrong(item))
-                                ? 'bg-red-50 dark:bg-red-800'
-                                : '',
+                            (!isTrainingModel && isHistoricalWrong(item))
+                              ? 'bg-red-50 dark:bg-red-800'
+                              : '',
 
-                              // ③ 最后放“手动标红”（最高优先级）
-                              item.markedRed ? 'bg-red-100 dark:bg-red-900' : '',
+                            item.markedRed ? 'bg-red-100 dark:bg-red-900' : '',
 
-                              `group-color-${i % 15}`
-                            ]"
+                            `group-color-${i % 15}`
+                          ]"
                     class="text-sm text-gray-900 dark:text-white"
                   >
                     <td class="p-4 flex items-center gap-2">
@@ -488,7 +533,7 @@ function isHistoricalWrong(item) {
                       <i
                         class="i-ph-flag-fill cursor-pointer"
                         :class="item.markedRed ? 'text-red-500' : 'text-gray-400'"
-                        @click="item.markedRed = !item.markedRed"
+                        @click.stop="item.markedRed = !item.markedRed"
                       />
                     </td>
                     <td class="p-4">
@@ -497,32 +542,30 @@ function isHistoricalWrong(item) {
                     <td>
                       <i
                         class="i-ph-speaker-simple-high-bold inline-block cursor-pointer"
-
                         @click.stop="play(`vocabulary/audio/${category}/${item.word[0]}.mp3`)"
-
                       />
 
                       <template v-if="isTrainingModel">
                         <i
                           :class="`${item.showSource ? 'i-ph-eye-slash-bold' : 'i-ph-eye-bold'} inline-block cursor-pointer ml-4`"
-                          title="显示原词"
-
-                          @click.stop="item.showMeaning = !item.showMeaning"
-
+                          title="显示原词" @click.stop="item.showSource = !item.showSource"
                         />
                         <input
                           :id="item.id" autocomplete="off" :class="getInputStyleClass(item)"
                           type="text"
                           @focusout="onInputFoucsOut($event, item)"
                           @focusin="onInputFoucsIn($event, `vocabulary/audio/${category}/${item.word[0]}.mp3`)"
-                          @keydown="onInputKeydown($event, item)"
+                          @keydown="onInputKeydown($event, item, index, wordGroup)"
                         >
                       </template>
                     </td>
                     <td class="group relative whitespace-nowrap p-4">
-                      <div
-                        v-if="!isTrainingModel || item.showSource || (isTrainingModel && isOnlyShowErrors && isHistoricalWrong(item)) || isShowSource"
-                      >
+                      <div v-if="
+                                !isTrainingModel
+                                || item.showSource
+                                || isShowSource
+                                || (isOnlyShowErrors && isHistoricalWrong(item))
+                              ">
 
                         <div class="flex items-center">
                           <!-- 单词 -->
@@ -541,7 +584,7 @@ function isHistoricalWrong(item) {
 
                           <!-- 🔥 错词强度 -->
                           <span
-                            v-if="!isTrainingModel && getWrongLevel(item) > 0"
+                            v-if="getWrongLevel(item) > 0"
                             class="ml-2 text-xs text-red-500"
                           >
                             🔥{{ getWrongLevel(item) }}
@@ -553,7 +596,7 @@ function isHistoricalWrong(item) {
                           class="absolute right-0 top-0 hidden h-100% items-center group-hover:flex"
                           @click.stop="copyText(item)"
                         >
-                          <i class="i-ph-copy block cursor-pointer px-4"/>
+                          <i class="i-ph-copy block cursor-pointer px-4" />
                         </div>
                       </div>
                     </td>
@@ -563,13 +606,25 @@ function isHistoricalWrong(item) {
                       {{ item.pos }}
                     </td>
                     <td class="p-4">
-                      {{ isTrainingModel ? (item.showSource ? item.meaning : '') : item.meaning }}
+                      {{
+                        isTrainingModel
+                          ? (isShowMeaning ? item.meaning : '')
+                          : item.meaning
+                      }}
                     </td>
                     <td class="p-4">
-                      {{ isTrainingModel ? (item.showSource ? item.example : '') : item.example }}
+                      {{
+                        isTrainingModel
+                          ? (item.showExample ? item.example : '')
+                          : item.example
+                      }}
                     </td>
                     <td class="p-4 whitespace-pre-line">
-                      {{ isTrainingModel ? (item.showSource ? item.extra : '') : item.extra }}
+                      {{
+                        isTrainingModel
+                          ? (item.showExtra ? item.extra : '')
+                          : item.extra
+                      }}
                     </td>
                   </tr>
                 </template>
@@ -590,21 +645,21 @@ function isHistoricalWrong(item) {
           <button
             type="button"
             class="rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-medium text-white dark:bg-blue-600 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-            @click="isFinishTraining = true"
+            @click.stop="isFinishTraining = true"
           >
             完成练习
           </button>
           <button
             type="button"
             class="ml-2 rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-medium text-white dark:bg-blue-600 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-            @click="isOnlyShowErrors = !isOnlyShowErrors"
+            @click.stop="isOnlyShowErrors = !isOnlyShowErrors"
           >
             {{ isOnlyShowErrors ? '展示所有' : '仅展示错词' }}
           </button>
           <button
             type="button"
             class="ml-2 rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-medium text-white dark:bg-blue-600 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-            @click="copyAllError"
+            @click.stop="copyAllError"
           >
             拷贝错词
           </button>
