@@ -9,7 +9,7 @@ const isShowMeaning = ref(false)
 const isAutoPlayWordAudio = ref(true)
 const isOnlyShowErrors = ref(false)
 const isFinishTraining = ref(false)
-const isShowSource = ref(false)
+
 
 const trainingStats = ref('')
 const keyword = ref('')
@@ -19,6 +19,12 @@ const category = ref(localStorage.getItem(CHAPTER_KEY) || chapters[0])
 const loaded = ref(false)
 const refVocabulary = reactive(vocabulary)
 
+const finishedList = ref([])
+
+function finishTraining() {
+  finishedList.value = [...flatDisplayWords.value] // ✅ 锁定当前范围
+  isFinishTraining.value = true
+}
 
 watch(category, (newVal, oldVal) => {
   // console.log(newVal, oldVal)
@@ -32,6 +38,7 @@ watch(category, (newVal, oldVal) => {
       item.markedRed = false
       item.showExample = false
       item.showExtra = false
+      item.showMeaning = false
     }
   }
 
@@ -40,31 +47,43 @@ watch(category, (newVal, oldVal) => {
   })
 })
 
-
+const flatDisplayWords = computed(() => {
+  return displayWords.value.flat()
+})
 
 function calcStats() {
   let error = 0
   let missing = 0
   let correct = 0
+
   if (isTrainingModel.value) {
-    const cur = refVocabulary[category.value]
-    // 遍历所有单词的属性
-    for (const group of cur.words) {
-      for (const item of group) {
-        if (item.spellValue) {
-          if (isHistoricalWrong(item))
-            error++
-          else
-            correct++
+
+    const list = isFinishTraining.value
+      ? finishedList.value
+      : flatDisplayWords.value
+
+    for (const item of list) {
+      if (item.spellValue) {
+        if (item.spellError) {
+          error++
+        } else {
+          correct++
         }
-        else { missing++ }
+      } else {
+        missing++
       }
     }
   }
+
   return `${missing} 个未完成，${correct} 个正确，${error} 个错误`
 }
 
 onMounted(() => {
+
+  document.addEventListener('keydown', (e) => {
+    console.log('🌍 全局keydown:', e.key)
+  })
+
   loaded.value = true
 
   // 只能同时播放一个音频
@@ -73,17 +92,21 @@ onMounted(() => {
     audio.onplay = () => {
       for (const _audio of audioTags) {
         _audio.blur()
-        if (audio !== _audio)
+        if (audio !== _audio) {
           _audio.pause()
+        }
       }
     }
   }
 })
 
 onUpdated(() => {
+  console.log('🔄 DOM更新了')
+
   // 音频再切换 SRC 之后需要调用一下 load() 不然看不到效果
-  for (const el of document.getElementsByTagName('audio'))
+  for (const el of document.getElementsByTagName('audio')) {
     el.load()
+  }
 })
 
 document.addEventListener('keydown', (ev) => {
@@ -113,6 +136,7 @@ document.addEventListener('keydown', (ev) => {
 })
 
 let audio = null
+
 function play(audioPath) {
   if (audio) {
     audio.pause()
@@ -128,75 +152,100 @@ function copyText(item) {
   navigator.clipboard.writeText(text)
 }
 
-
-function onInputKeydown(e, item, index, wordGroup) {
+function onInputKeydown(e, item) {
+  const {key} = e
   e.stopPropagation()
-  const { key } = e
 
-  if (key === 'Enter') {
-    e.preventDefault()
+  const list = flatDisplayWords.value
+  const currentIndex = list.findIndex(v => v.id === item.id)
 
-    let nextIndex = index + 1
+  console.log('👉 keydown:', {
+    key,
+    id: item.id,
+    currentIndex
+  })
 
-    // 👉 跳过隐藏项（关键优化）
-    while (nextIndex < wordGroup.length) {
-      if (!wordGroup[nextIndex].hiddenByCheck) break
-      nextIndex++
-    }
-
-    const nextItem = wordGroup[nextIndex]
-
-    if (nextItem) {
-      nextTick(() => {
-        document.getElementById(nextItem.id)?.focus()
-      })
-    }
-  }
-
+  // 🔼 上一个
   if (key === 'Enter' && e.shiftKey) {
     e.preventDefault()
 
-    let prevIndex = index - 1
+    let prevIndex = currentIndex - 1
 
     while (prevIndex >= 0) {
-      if (!wordGroup[prevIndex].hiddenByCheck) break
+      if (!list[prevIndex].hiddenByCheck) break
       prevIndex--
     }
 
-    const prevItem = wordGroup[prevIndex]
+    const prevItem = list[prevIndex]
+
+    console.log('👆 上一个:', prevItem)
 
     if (prevItem) {
-      nextTick(() => {
+      setTimeout(() => {
         document.getElementById(prevItem.id)?.focus()
-      })
+      }, 50)
     }
   }
 
+  // 🔽 下一个
+  else if (key === 'Enter') {
+    e.preventDefault()
+
+    let nextIndex = currentIndex + 1
+
+    while (nextIndex < list.length) {
+      if (!list[nextIndex].hiddenByCheck) break
+      nextIndex++
+    }
+
+    const nextItem = list[nextIndex]
+
+    console.log('👇 下一个:', nextItem)
+
+    if (nextItem) {
+      setTimeout(() => {
+        document.getElementById(nextItem.id)?.focus()
+      }, 50)
+    } else {
+      console.log('🎉 已到最后一个（全局）')
+    }
+  }
+
+  // 🔊 播音
   if (key === 'ArrowUp') {
     e.preventDefault()
     play(`vocabulary/audio/${category.value}/${item.word[0]}.mp3`)
   }
 
+  // 👇 展示提示
   if (key === 'ArrowDown') {
     e.preventDefault()
-
-    item.showSource = true
-    item.showExample = true
-    item.showExtra = true
+    toggleHint(item)
   }
 
+  // ⬅️ 隐藏并跳下一个（也要改成全局！）
   if (key === 'ArrowLeft') {
     e.preventDefault()
 
-    // ✅ 勾选（隐藏）
     item.hiddenByCheck = true
 
-    // ✅ 自动跳到下一行（可选但强烈建议）
-    nextTick(() => {
-      document.getElementById((Number(item.id) + 1).toString())?.focus()
-    })
+    let nextIndex = currentIndex + 1
+
+    while (nextIndex < list.length) {
+      if (!list[nextIndex].hiddenByCheck) break
+      nextIndex++
+    }
+
+    const nextItem = list[nextIndex]
+
+    if (nextItem) {
+      setTimeout(() => {
+        document.getElementById(nextItem.id)?.focus()
+      }, 50)
+    }
   }
 
+  // ➡️ 取消隐藏
   if (key === 'ArrowRight') {
     e.preventDefault()
     item.hiddenByCheck = false
@@ -204,18 +253,24 @@ function onInputKeydown(e, item, index, wordGroup) {
 }
 
 function onInputFoucsIn(e, audioPath) {
-  if (isAutoPlayWordAudio.value)
+  if (isAutoPlayWordAudio.value) {
     play(audioPath)
+  }
 }
 
 function onInputFoucsOut(e, item) {
-  const { target } = e
+  const {target} = e
   const spellValue = target.value.toLowerCase().trim()
+
+  console.log('💥 focusout:', {
+    id: item.id,
+    value: spellValue
+  })
+
   if (spellValue.length < 1) {
     item.spellValue = ''
     item.spellError = false
-  }
-  else {
+  } else {
     item.spellValue = spellValue
 
     const isCorrect = item.word.map(v => v.toLowerCase().trim()).includes(spellValue)
@@ -230,31 +285,29 @@ function onInputFoucsOut(e, item) {
 function getInputStyleClass(item) {
   const cls = {
     error: 'ml-4 bg-red-50 border border-red-500 text-red-900 placeholder-red-700 text-sm rounded-lg focus:ring-red-500 dark:bg-gray-700 focus:border-red-500 inline-block p-2.5 dark:text-red-500 dark:placeholder-red-500 dark:border-red-500',
-    normal: 'ml-4 inline-block border border-gray-300 rounded-lg bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-600 focus:border-blue-500 dark:bg-gray-700 dark:text-white focus:ring-blue-500 dark:focus:border-blue-500 dark:focus:ring-blue-500 dark:placeholder-gray-400',
+    normal: 'ml-4 inline-block border w-[100px] border-gray-300 rounded-lg bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-600 focus:border-blue-500 dark:bg-gray-700 dark:text-white focus:ring-blue-500 dark:focus:border-blue-500 dark:focus:ring-blue-500 dark:placeholder-gray-400',
     success: 'ml-4 bg-green-50 border border-green-500 text-green-900 dark:text-green-400 placeholder-green-700 dark:placeholder-green-500 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 inline-block p-2.5 dark:bg-gray-700 dark:border-green-500',
   }
   if (isFinishTraining.value) {
-    if (item.spellError)
+    if (item.spellError) {
       return cls.error
-    if (item.spellValue.length > 0 && !item.spellError)
+    }
+    if (item.spellValue.length > 0 && !item.spellError) {
       return cls.success
+    }
   }
   return cls.normal
 }
 
 function copyAllError() {
-  const words = refVocabulary[category.value].words
-  const errorWords = []
-  for (const group of words) {
-    for (const item of group) {
-      if (item.spellError)
-        errorWords.push(`${item.word} ${item.pos} ${item.meaning}`)
-    }
-  }
+  const list = flatDisplayWords.value   // ✅ 改这里
+
+  const errorWords = list
+    .filter(item => item.spellError)
+    .map(item => `${item.word} ${item.pos} ${item.meaning}`)
+
   navigator.clipboard.writeText(errorWords.join('\n\n'))
 }
-
-
 
 const STORAGE_VERSION = 'v1'
 const STORAGE_KEY = `vocabulary_progress_${STORAGE_VERSION}`
@@ -267,8 +320,9 @@ function updateProgress(item, isCorrect) {
   const cat = category.value
   const id = item.id
 
-  if (!progressMap.value[cat])
+  if (!progressMap.value[cat]) {
     progressMap.value[cat] = {}
+  }
 
   if (!progressMap.value[cat][id]) {
     progressMap.value[cat][id] = {
@@ -281,10 +335,11 @@ function updateProgress(item, isCorrect) {
 
   const record = progressMap.value[cat][id]
 
-  if (isCorrect)
+  if (isCorrect) {
     record.correctCount++
-  else
+  } else {
     record.wrongCount++
+  }
 
   record.lastResult = isCorrect ? 'correct' : 'wrong'
   record.lastTime = Date.now()
@@ -350,7 +405,6 @@ watch(isErrorTrainingMode, () => {
   for (const group of words) {
     for (const item of group) {
       item.hiddenByCheck = false
-      item.showSource = false
     }
   }
 })
@@ -362,11 +416,13 @@ watch(isTrainingModel, (val) => {
 })
 
 function toggleHint(item) {
-  item.showSource = true
-  item.showExample = true
-  item.showExtra = true
-}
+  const isOpen =  item.showMeaning
 
+  // 👉 统一开关
+  item.showMeaning = !isOpen
+  item.showExample = !isOpen
+  item.showExtra = !isOpen
+}
 
 watch(isErrorTrainingMode, () => {
   const words = refVocabulary[category.value].words
@@ -374,7 +430,6 @@ watch(isErrorTrainingMode, () => {
   for (const group of words) {
     for (const item of group) {
       item.hiddenByCheck = false
-      item.showSource = false
       item.showExample = false
       item.showExtra = false
     }
@@ -439,13 +494,7 @@ watch(isErrorTrainingMode, () => {
               />
               <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">释义</span>
             </label>
-            <label v-if="isTrainingModel" class="ml-2 inline-flex cursor-pointer items-center">
-              <input v-model="isShowSource" type="checkbox" class="peer sr-only">
-              <div
-                class="peer relative h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:border after:border-gray-300 dark:border-gray-600 after:rounded-full after:bg-white dark:bg-gray-700 peer-checked:bg-blue-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:peer-focus:ring-blue-800 rtl:peer-checked:after:-translate-x-full"
-              />
-              <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">原词</span>
-            </label>
+
             <label v-if="isTrainingModel" class="ml-2 inline-flex cursor-pointer items-center">
               <input v-model="isAutoPlayWordAudio" type="checkbox" class="peer sr-only">
               <div
@@ -461,29 +510,29 @@ watch(isErrorTrainingMode, () => {
         <div class="overflow-x-auto rounded-lg">
           <div class="inline-block min-w-full align-middle">
             <div class="overflow-hidden shadow sm:rounded-lg">
-              <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+              <table class="min-w-full table-fixed divide-y divide-gray-200 dark:divide-gray-600">
                 <thead class="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th class="p-4 text-left text-xs font-medium">隐藏</th>
-                  <th class="p-4 text-left text-xs font-medium tracking-wider text-gray-500 dark:text-white">
+                  <th class="w-[2%] p-4 text-left text-xs ">隐藏</th>
+                  <th class="w-[2%] p-4 text-left text-xs  tracking-wider text-gray-500 dark:text-white">
                     #
                   </th>
-                  <th class="p-4 text-xs font-medium tracking-wider text-gray-500 dark:text-white">
+                  <th class="w-[2%] p-4 text-xs  tracking-wider text-gray-500 dark:text-white">
                     <br>
                   </th>
-                  <th class="p-4 text-left text-xs font-medium tracking-wider text-gray-500 dark:text-white">
+                  <th class="w-[5%] p-4 text-left text-xs  tracking-wider text-gray-500 dark:text-white">
                     词
                   </th>
-                  <th class="w-0 text-left text-xs font-medium text-gray-500 dark:text-white">
+                  <th class="w-[6%] w-0 text-left text-xs  text-gray-500 dark:text-white">
                     词性
                   </th>
-                  <th class="p-4 text-left text-xs font-medium tracking-wider text-gray-500 dark:text-white">
+                  <th class="w-[18%] p-4 text-left text-xs tracking-wider text-gray-500 dark:text-white">
                     词义
                   </th>
-                  <th class="p-4 text-left text-xs font-medium tracking-wider text-gray-500 dark:text-white">
+                  <th class="w-[32%] p-4 text-left text-xs  tracking-wider text-gray-500 dark:text-white">
                     例句
                   </th>
-                  <th class="p-4 text-left text-xs font-medium tracking-wider text-gray-500 dark:text-white">
+                  <th class="w-[33%] p-4 text-left text-xs tracking-wider text-gray-500 dark:text-white">
                     拓展
                   </th>
                 </tr>
@@ -491,7 +540,7 @@ watch(isErrorTrainingMode, () => {
                 <tbody class="bg-white dark:bg-gray-800">
                 <tr class="bg-hex-f3f3f3">
                   <td
-                    colspan="7"
+                    colspan="8"
                     class="px-4 py-6 text-sm font-normal text-gray-900 dark:bg-gray-500 dark:text-white"
                   >
                     <div class="flex flex-row">
@@ -547,25 +596,26 @@ watch(isErrorTrainingMode, () => {
 
                       <template v-if="isTrainingModel">
                         <i
-                          :class="`${item.showSource ? 'i-ph-eye-slash-bold' : 'i-ph-eye-bold'} inline-block cursor-pointer ml-4`"
-                          title="显示原词" @click.stop="item.showSource = !item.showSource"
+                          :class="`${item.showMeaning  ? 'i-ph-eye-slash-bold' : 'i-ph-eye-bold'} inline-block cursor-pointer ml-4`"
+                          title="显示原词" @click.stop="toggleHint(item)"
                         />
                         <input
-                          :id="item.id" autocomplete="off" :class="getInputStyleClass(item)"
+                          :id="item.id" autocomplete="off"  :class="getInputStyleClass(item) + ' w-[100px]'"
                           type="text"
                           @focusout="onInputFoucsOut($event, item)"
                           @focusin="onInputFoucsIn($event, `vocabulary/audio/${category}/${item.word[0]}.mp3`)"
-                          @keydown="onInputKeydown($event, item, index, wordGroup)"
+                          @keydown="onInputKeydown($event, item)"
                         >
                       </template>
                     </td>
-                    <td class="group relative whitespace-nowrap p-4">
+                    <td class="group relative whitespace-nowrap overflow-hidden text-ellipsis px-2 py-2 text-sm">
                       <div v-if="
                                 !isTrainingModel
-                                || item.showSource
-                                || isShowSource
+                                || isShowMeaning
+                                || item.showMeaning
                                 || (isOnlyShowErrors && isHistoricalWrong(item))
-                              ">
+                              "
+                      >
 
                         <div class="flex items-center">
                           <!-- 单词 -->
@@ -596,7 +646,7 @@ watch(isErrorTrainingMode, () => {
                           class="absolute right-0 top-0 hidden h-100% items-center group-hover:flex"
                           @click.stop="copyText(item)"
                         >
-                          <i class="i-ph-copy block cursor-pointer px-4" />
+                          <i class="i-ph-copy block cursor-pointer px-4"/>
                         </div>
                       </div>
                     </td>
@@ -608,21 +658,21 @@ watch(isErrorTrainingMode, () => {
                     <td class="p-4">
                       {{
                         isTrainingModel
-                          ? (isShowMeaning ? item.meaning : '')
+                          ? ((isShowMeaning  || item.showMeaning ) ? item.meaning : '')
                           : item.meaning
                       }}
                     </td>
                     <td class="p-4">
                       {{
                         isTrainingModel
-                          ? (item.showExample ? item.example : '')
+                          ? (isShowMeaning || item.showMeaning || item.showExample ? item.example : '')
                           : item.example
                       }}
                     </td>
                     <td class="p-4 whitespace-pre-line">
                       {{
                         isTrainingModel
-                          ? (item.showExtra ? item.extra : '')
+                          ? (isShowMeaning || item.showMeaning || item.showExtra ? item.extra : '')
                           : item.extra
                       }}
                     </td>

@@ -46,7 +46,7 @@ const vocabulary = {
       "word": ["oxygen"],
       "pos": "n.",
       "meaning": "氧气",
-      "example": "Hydrogen and Oxygen are gases",
+      "example": "hydrogen and oxygen are gases",
       "extra": "-"
     }, {
       "id": 5,
@@ -56,7 +56,7 @@ const vocabulary = {
       "word": ["oxide"],
       "pos": "n.",
       "meaning": "氧化物",
-      "example": "Oxide is a part of our daily life",
+      "example": "Oxides are common in daily life",
       "extra": "-"
     }, {
       "id": 6,
@@ -76,7 +76,7 @@ const vocabulary = {
       "word": ["hydrogen"],
       "pos": "n.",
       "meaning": "氢气",
-      "example": "Two parts hydrogen, one part oxygen, you'll get water everytime",
+      "example": "Two parts hydrogen, one part oxygen, you'll get water every time",
       "extra": "-"
     }], [{
       "id": 8,
@@ -116,7 +116,7 @@ const vocabulary = {
       "word": ["longitude"],
       "pos": "n.",
       "meaning": "经度",
-      "example": "The captain determine the latitude and longitude of his ship",
+      "example": "The captain determines the latitude and longitude of his ship",
       "extra": "-"
     }, {
       "id": 12,
@@ -196,7 +196,7 @@ const vocabulary = {
       "word": ["endanger"],
       "pos": "v.",
       "meaning": "使遭受危险；危及",
-      "example": "If you are work hard without rest, you will endanger your health",
+      "example": "If you work hard without rest, you will endanger your health",
       "extra": "endangered adj. 濒临灭绝"
     }, {
       "id": 20,
@@ -267,7 +267,7 @@ const vocabulary = {
       "pos": "n.",
       "meaning": "磁铁；吸铁石",
       "example": "He picked all the pins up with a magnet",
-      "extra": "magnetic adj./词的，有磁性的；有吸引力的"
+      "extra": "magnetic adj./有磁性的，有磁性的；有吸引力的"
     }, {
       "id": 27,
       "spellError": false,
@@ -335,7 +335,7 @@ const vocabulary = {
       "showSource": false,
       "word": ["breeze"],
       "pos": "n.",
-      "meaning": "微分；和风",
+      "meaning": "微风；和风",
       "example": "We are enjoying the cool breeze that comes from the lake",
       "extra": "-"
     }, {
@@ -396,7 +396,7 @@ const vocabulary = {
       "word": ["volcano"],
       "pos": "n.",
       "meaning": "火山",
-      "example": "The valcano erupted and two small towns were buried under meters of hot ash, mud and bits of molten rock",
+      "example": "The volcano erupted and two small towns were buried under meters of hot ash, mud and bits of molten rock",
       "extra": "-"
     }, {
       "id": 40,
@@ -436,7 +436,7 @@ const vocabulary = {
       "word": ["smog"],
       "pos": "n.",
       "meaning": "烟雾；雾霾",
-      "example": "The smog was so bad that school children were adviced to stay indoors",
+      "example": "The smog was so bad that school children were advised to stay indoors",
       "extra": "-"
     }, {
       "id": 44,
@@ -486,7 +486,7 @@ const vocabulary = {
       "word": ["flooding"],
       "pos": "n.",
       "meaning": "洪水泛滥",
-      "example": "Since the flooding began last month, seventeen people have died state wide",
+      "example": "Since the flooding began last month, seventeen people have died statewide",
       "extra": "-"
     }, {
       "id": 49,
@@ -636,7 +636,7 @@ const vocabulary = {
       "word": ["oasis"],
       "pos": "n.",
       "meaning": "绿洲；宜人之地",
-      "example": "Oasis symbolizes a hope in desert areas",
+      "example": "An oasis symbolizes hope in desert areas",
       "extra": "-"
     }], [{
       "id": 64,
@@ -796,7 +796,7 @@ const vocabulary = {
       "word": ["pacific"],
       "pos": "adj./n.",
       "meaning": "平静的；平和的；太平洋的；太平洋",
-      "example": "What a beautiful and pacific place this is",
+      "example": "What a peaceful place this is",
       "extra": "pacify v. 平息；安抚；使平静"
     }], [{
       "id": 80,
@@ -826,7 +826,7 @@ const vocabulary = {
       "word": ["navigation"],
       "pos": "n.",
       "meaning": "航海；航行",
-      "example": "Navigation is a game for brave people",
+      "example": "Navigation requires skill and courage",
       "extra": "navigator n. 航海家；领航员"
     }], [{
       "id": 83,
@@ -1156,7 +1156,7 @@ const vocabulary = {
       "word": ["arid"],
       "pos": "adj.",
       "meaning": "干燥的；干旱的；枯燥的",
-      "example": "It is difficult to grow food in arid dessert areas",
+      "example": "It is difficult to grow food in arid desert areas",
       "extra": "-"
     }], [{
       "id": 116,
@@ -1294,7 +1294,7 @@ const vocabulary = {
       "spellValue": "",
       "showSource": false,
       "word": ["lightning"],
-      "pos": "n./v.",
+      "pos": "n.",
       "meaning": "闪电/闪电般的，极快的",
       "example": "During the storm, flashes of lightning appeared in the sky",
       "extra": "lighten v. 使变轻；（使）发亮。lighter n. 打火机。lightly adv. 轻轻地；轻松地"
@@ -1367,7 +1367,7 @@ const vocabulary = {
       "pos": "adj./n.",
       "meaning": "摄氏的/摄氏温度",
       "example": "The maximum temperature in July may be 36 degrees Celsius",
-      "extra": "Farhrenheit adj./n. 华氏的/华氏温度"
+      "extra": "Fahrenheit adj./n. 华氏的/华氏温度"
     }, {
       "id": 137,
       "spellError": false,
@@ -1466,7 +1466,7 @@ const vocabulary = {
       "word": ["hillside"],
       "pos": "n.",
       "meaning": "小山的山腰；山坡",
-      "example": "The path steepened as they climed the hillside",
+      "example": "The path steepened as they climbed the hillside",
       "extra": "-"
     }, {
       "id": 147,
@@ -1477,7 +1477,7 @@ const vocabulary = {
       "pos": "v.",
       "meaning": "远眺；俯瞰；未注意到",
       "example": "The house on the hill overlooks the village",
-      "extra": "be easily overlook 容易被忽略的"
+      "extra": "be easily overlooked 容易被忽略的"
     }], [{
       "id": 148,
       "spellError": false,
@@ -1586,7 +1586,7 @@ const vocabulary = {
       "word": ["inappropriate"],
       "pos": "adj.",
       "meaning": "不合适的",
-      "example": "our bright red coat would be quite inappropriate for a funeral",
+      "example": "your bright red coat would be quite inappropriate for a funeral",
       "extra": "-"
     }, {
       "id": 159,
@@ -1856,7 +1856,7 @@ const vocabulary = {
       "word": ["grand"],
       "pos": "adj.",
       "meaning": "宏大的；豪华的；宏伟的；极好的",
-      "example": "He was born in the purple and was brougt up in the grand palace",
+      "example": "He was born in the purple and was brought up in the grand palace",
       "extra": "be born in the purple 出生在皇室家庭；出生显贵"
     }, {
       "id": 186,
@@ -1876,7 +1876,7 @@ const vocabulary = {
       "word": ["super"],
       "pos": "adj.",
       "meaning": "极好的；特级的",
-      "example": "I've discoverd a super restaurant near here",
+      "example": "I've discovered a super restaurant near here",
       "extra": "-"
     }, {
       "id": 188,
@@ -1906,7 +1906,7 @@ const vocabulary = {
       "word": ["wilderness"],
       "pos": "n.",
       "meaning": "荒野",
-      "example": "From his attic window, he looked out over a beautiful wildernes",
+      "example": "From his attic window, he looked out over a beautiful wilderness",
       "extra": "wild adj. 野生的；荒芜的。 attic 阁楼；顶楼"
     }, {
       "id": 191,
@@ -1976,7 +1976,7 @@ const vocabulary = {
       "word": ["lunar"],
       "pos": "adj.",
       "meaning": "月亮的；月球的",
-      "example": "All traditional Chinese festivals are lunar callendar festivals",
+      "example": "All traditional Chinese festivals are lunar calendar festivals",
       "extra": "-"
     }, {
       "id": 198,
@@ -2443,7 +2443,7 @@ const vocabulary = {
       "word": ["respire"],
       "pos": "v.",
       "meaning": "呼吸",
-      "example": "Plants respire in the same way as animals, taking in oxygen and giveing out carbon dioxide",
+      "example": "Plants respire in the same way as animals, taking in oxygen and giving out carbon dioxide",
       "extra": "相比于 breathe 更正式，但是 breath 更常用"
     }, {
       "id": 244,
@@ -3043,7 +3043,7 @@ const vocabulary = {
       "word": ["jungle"],
       "pos": "n.",
       "meaning": "丛林",
-      "example": "Tigets are found in the jungle of Asia",
+      "example": "Tights are found in the jungle of Asia",
       "extra": "-"
     }, {
       "id": 304,
@@ -3093,7 +3093,7 @@ const vocabulary = {
       "word": ["charcoal"],
       "pos": "n.",
       "meaning": "木炭",
-      "example": "Preare a fire in a charcoal grill",
+      "example": "Prepare a fire in a charcoal grill",
       "extra": "grill n. 烧烤架；v. 烧，烤"
     }, {
       "id": 309,
@@ -3123,7 +3123,7 @@ const vocabulary = {
       "word": ["forestry"],
       "pos": "n.",
       "meaning": "林学；林业",
-      "example": "Mountainous areas covered with forests are the very place for foresty development",
+      "example": "Mountainous areas covered with forests are the very place for forest development",
       "extra": "-"
     }], [{
       "id": 312,
@@ -3453,7 +3453,7 @@ const vocabulary = {
       "word": ["counterbalance"],
       "pos": "n./v.",
       "meaning": "其平衡作用的事物；抵消；对...起平衡作用",
-      "example": "Their strength in defense couterbalances our strength in attack",
+      "example": "Their strength in defense counterbalances our strength in attack",
       "extra": "-"
     }], [{
       "id": 345,
@@ -3523,7 +3523,7 @@ const vocabulary = {
       "word": ["ruin"],
       "pos": "v./n.",
       "meaning": "毁坏；摧毁；毁灭；废墟",
-      "example": "The stome ruinned the crops",
+      "example": "The stome ruined the crops",
       "extra": "-"
     }, {
       "id": 352,
@@ -3971,7 +3971,7 @@ const vocabulary = {
       "pos": "adj.",
       "meaning": "残忍的；残暴的",
       "example": "The death of their daughter was a cruel blow",
-      "extra": "creul blow 沉重打击"
+      "extra": "cruel blow 沉重打击"
     }], [{
       "id": 396,
       "spellError": false,
@@ -4370,7 +4370,7 @@ const vocabulary = {
       "word": ["penguin"],
       "pos": "n.",
       "meaning": "企鹅",
-      "example": "The penguin is polular with people",
+      "example": "The penguin is popular with people",
       "extra": "-"
     }, {
       "id": 436,
@@ -5507,7 +5507,7 @@ const vocabulary = {
       "word": ["astronaut"],
       "pos": "n.",
       "meaning": "宇航员",
-      "example": "An american astronaut is begining a year-long trip in space",
+      "example": "An american astronaut is beginning a year-long trip in space",
       "extra": "-"
     }], [{
       "id": 549,
@@ -5667,7 +5667,7 @@ const vocabulary = {
       "word": ["vent"],
       "pos": "n./v.",
       "meaning": "排气口；排放；发泄",
-      "example": "When gases and steam can get vented from a valcano's cracks, it's probably not about to erupt",
+      "example": "When gases and steam can get vented from a volcano's cracks, it's probably not about to erupt",
       "extra": "-"
     }, {
       "id": 565,
@@ -7774,7 +7774,7 @@ const vocabulary = {
       "word": ["logic"],
       "pos": "n.",
       "meaning": "逻辑学；逻辑",
-      "example": "Socrates laied the foundations of logic",
+      "example": "Socrates laid the foundations of logic",
       "extra": "-"
     }], [{
       "id": 775,
@@ -10154,7 +10154,7 @@ const vocabulary = {
       "word": ["reward"],
       "pos": "n./v.",
       "meaning": "报答；赏金；报答",
-      "example": "Virture is its own reward",
+      "example": "Virtue is its own reward",
       "extra": "reward sb. for sth. 为某事报答某人。 as a reward for 作为对（某事）的报酬"
     }], [{
       "id": 1013,
@@ -10452,7 +10452,7 @@ const vocabulary = {
       "pos": "v.",
       "meaning": "利用",
       "example": "In order to utilize land more fully, they adopted close planting",
-      "extra": "utility n. 效用；有用。utilities n. （水、电、煤气等）公用事业。utilizbation=utilization n. 利用；使用"
+      "extra": "utility n. 效用；有用。utilities n. （水、电、煤气等）公用事业。utilization=utilization n. 利用；使用"
     }, {
       "id": 1042,
       "spellError": false,
@@ -10771,8 +10771,8 @@ const vocabulary = {
       "word": ["echo"],
       "pos": "n./v.",
       "meaning": "回声；发回声；模仿；重复",
-      "example": "The cathedral is echoing with joynous hymns",
-      "extra": "hyms n. 赞美诗"
+      "example": "The cathedral is echoing with joyous hymns",
+      "extra": "hymns n. 赞美诗"
     }, {
       "id": 1074,
       "spellError": false,
@@ -10781,7 +10781,7 @@ const vocabulary = {
       "word": ["sensor"],
       "pos": "n.",
       "meaning": "传感器",
-      "example": "Place the sensor on a flat surface and rotate it slowly through 360 degress",
+      "example": "Place the sensor on a flat surface and rotate it slowly through 360 degrees",
       "extra": "-"
     }], [{
       "id": 1075,
@@ -14690,7 +14690,7 @@ const vocabulary = {
       "pos": "n.",
       "meaning": "一件物品；一件商品",
       "example": "She couldn't wedge another item into the suitcase",
-      "extra": "-"
+      "extra": "wedge：本义是 “楔子”，这里作动词，指用力塞进、挤入\n"
     }, {
       "id": 1463,
       "spellError": false,
@@ -14730,7 +14730,9 @@ const vocabulary = {
       "pos": "n./adj.",
       "meaning": "材料；原料；人才；物质的",
       "example": "There is singer material among these young girls",
-      "extra": "-"
+      "extra": "material 这里不是 “材料”，而是天赋、潜质、可塑之才的意思。\n" +
+        "singer material = 适合当歌手的资质、料子。\n" +
+        "整句意思：这些年轻女孩中，有人具备当歌手的潜质 / 天赋。"
     }, {
       "id": 1467,
       "spellError": false,
@@ -14830,7 +14832,17 @@ const vocabulary = {
       "pos": "v.",
       "meaning": "使再循环；回收利用",
       "example": "I plan on recycling old warehouses as condominiums",
-      "extra": "-"
+      "extra": "plan on doing sth.\n" +
+        "打算、计划做某事\n" +
+        "recycle\n" +
+        "本义：回收再利用\n" +
+        "这里指改造、重新利用（旧建筑）\n" +
+        "old warehouses\n" +
+        "旧仓库\n" +
+        "as condominiums\n" +
+        "改成、用作公寓 / 共管公寓（condominium = condo）\n" +
+        "整句翻译\n" +
+        "我打算把旧仓库改造再利用，改成公寓。"
     }, {
       "id": 1477,
       "spellError": false,
@@ -14840,7 +14852,9 @@ const vocabulary = {
       "pos": "v.",
       "meaning": "再次使用",
       "example": "These bottles are designed to be reused up to twenty times",
-      "extra": "-"
+      "extra": "被动语态：are designed to 表示 “被设计用来……”\n" +
+        "reused：重复使用、再次利用\n" +
+        "up to twenty times：最多二十次"
     }], [{
       "id": 1478,
       "spellError": false,
@@ -14919,7 +14933,7 @@ const vocabulary = {
       "word": ["shampoo"],
       "pos": "v./n.",
       "meaning": "用洗发剂（头发）；洗发剂",
-      "example": "She weted her hair and then put shampoo on it",
+      "example": "She wet her hair and then put shampoo on it",
       "extra": "-"
     }, {
       "id": 1486,
@@ -15010,7 +15024,9 @@ const vocabulary = {
       "pos": "v.",
       "meaning": "打扫；（迅猛的）吹走；掠过",
       "example": "I saw the tops of trees moving in circles and pieces of wood were swept up into the air",
-      "extra": "sweep the board 囊括所有奖项"
+      "extra": "sweep the board 囊括所有奖项 \n tops of trees：树梢\n" +
+        "moving in circles：绕着圈转动\n" +
+        "were swept up into the air：被（风）卷到空中"
     }], [{
       "id": 1495,
       "spellError": false,
@@ -15030,7 +15046,9 @@ const vocabulary = {
       "pos": "n.",
       "meaning": "地毯",
       "example": "The armchair blends well with the color of the carpet",
-      "extra": "red carpet （迎接贵宾用的）红毯"
+      "extra": "red carpet （迎接贵宾用的）红毯 \n armchair：扶手椅\n" +
+        "blend well with：与…… 很协调、很搭配\n" +
+        "carpet：地毯"
     }, {
       "id": 1497,
       "spellError": false,
@@ -15040,7 +15058,11 @@ const vocabulary = {
       "pos": "n.",
       "meaning": "小地毯；（盖肩或腿的）小毛毯",
       "example": "He bargained with the merchant for an hour before he bought the rug",
-      "extra": "-"
+      "extra": "bargain with sb.：和某人讨价还价、讲价\n" +
+        "merchant：商人\n" +
+        "for an hour：持续一小时\n" +
+        "before he bought the rug：在他买下地毯之前\n" +
+        "rug：小地毯、毛毯"
     }, {
       "id": 1498,
       "spellError": false,
@@ -15050,7 +15072,10 @@ const vocabulary = {
       "pos": "n.",
       "meaning": "地垫",
       "example": "I wiped my shoes on the mat before I came in",
-      "extra": "-"
+      "extra": "wipe：擦、擦拭\n" +
+        "mat：地垫、门垫\n" +
+        "on the mat：在地垫上\n" +
+        "before I came in：在我进来之前"
     }, {
       "id": 1499,
       "spellError": false,
@@ -15140,7 +15165,11 @@ const vocabulary = {
       "pos": "n.",
       "meaning": "订书钉；主要部分",
       "example": "He used a pair of scissors to take the staple out of the document",
-      "extra": "-"
+      "extra": "他用一把剪刀把文件上的订书钉取了下来。\n" +
+        "简要解析：\n" +
+        "a pair of scissors：一把剪刀\n" +
+        "take the staple out：把订书钉拔出来、取掉\n" +
+        "document：文件"
     }, {
       "id": 1508,
       "spellError": false,
@@ -15189,7 +15218,7 @@ const vocabulary = {
       "word": ["cable"],
       "pos": "n.",
       "meaning": "电缆；缆绳；电报；有线电视",
-      "example": "This country has almost 15 milliion subscribers to satellite and cable television",
+      "example": "This country has almost 15 million subscribers to satellite and cable television",
       "extra": "a cable car 缆车"
     }, {
       "id": 1513,
@@ -17421,7 +17450,8 @@ const vocabulary = {
       "pos": "n.",
       "meaning": "供应、预备",
       "example": "Provision of shelter was the Red Cross's main concern for the disaster victims",
-      "extra": "provisions 食品供应"
+      "extra": "provisions 食品供应 \n main concern：主要关切 / 主要任务\n" +
+        "disaster victims：灾民，受灾群众 "
     }, {
       "id": 1732,
       "spellError": false,
@@ -17531,7 +17561,8 @@ const vocabulary = {
       "pos": "n.",
       "meaning": "茶点、点心",
       "example": "We only serve drinks and light refreshments on this short flight",
-      "extra": "-"
+      "extra": "light refreshments：简易点心、小食（非正餐）\n" +
+        "short flight：短途航班"
     }, {
       "id": 1743,
       "spellError": false,
@@ -18622,7 +18653,7 @@ const vocabulary = {
       "pos": "n.",
       "meaning": "果酱",
       "example": "He spread some apple jam on the bread",
-      "extra": "-"
+      "extra": "spread：动词，涂、抹；过去式 / 过去分词同形。\n"
     }], [{
       "id": 1851,
       "spellError": false,
@@ -18702,7 +18733,8 @@ const vocabulary = {
       "pos": "n.",
       "meaning": "姜",
       "example": "The ginger should be crushed up before it is added to the boiling jam",
-      "extra": "-"
+      "extra": "should be crushed up：应该被碾碎\n" +
+        "is added to：被加入到…… 中"
     }, {
       "id": 1859,
       "spellError": false,
@@ -20158,7 +20190,13 @@ const vocabulary = {
       "pos": "n.",
       "meaning": "机械；装置",
       "example": "A new piece of apparatus was used in the experiment",
-      "extra": "-"
+      "extra": "语态：被动语态（was used）\n" +
+        "直译：一套新的仪器 / 设备被用在了实验中。\n" +
+        "通顺译法：实验中使用了一套新仪器。\n" +
+        "关键词\n" +
+        "apparatus：n. 仪器、设备、装置\n" +
+        "a new piece of apparatus：一套新仪器\n" +
+        "in the experiment：在实验中"
     }, {
       "id": 2000,
       "spellError": false,
@@ -20498,7 +20536,10 @@ const vocabulary = {
       "pos": "adj./adv.",
       "meaning": "向内的；内心的/向内",
       "example": "The expedition discovered an inward passage",
-      "extra": "-"
+      "extra": "expedition n. 探险队，考察队\n" +
+        "discovered v. 发现\n" +
+        "inward adj./adv. 向内的，向内\n" +
+        "passage n. 通道，走廊"
     }, {
       "id": 2032,
       "spellError": false,
@@ -26108,7 +26149,7 @@ const vocabulary = {
       "pos": "n./v.",
       "meaning": "贿赂/向...行贿",
       "example": "The counterfeiter bribed the police officer to let him go free",
-      "extra": "bribery n. 贿赂行为。bribee n. 受贿者 briber n. 行贿者"
+      "extra": "bribery n. 贿赂行为。bribe n. 受贿者 briber n. 行贿者"
     }, {
       "id": 2563,
       "spellError": false,
@@ -26157,7 +26198,7 @@ const vocabulary = {
       "word": ["murder"],
       "pos": "n./v.",
       "meaning": "谋杀",
-      "example": "There have been serveral murder cases this year",
+      "example": "There have been several  murder cases this year",
       "extra": "-"
     }, {
       "id": 2568,
@@ -27004,7 +27045,7 @@ const vocabulary = {
       "word": ["stab"],
       "pos": "v./n.",
       "meaning": "刺；戳",
-      "example": "She stabbled him in the leg with a knife",
+      "example": "She stabbed  him in the leg with a knife",
       "extra": "-"
     }], [{
       "id": 2652,
