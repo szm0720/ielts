@@ -10,7 +10,6 @@ const isAutoPlayWordAudio = ref(true)
 const isOnlyShowErrors = ref(false)
 const isFinishTraining = ref(false)
 
-
 const trainingStats = ref('')
 const keyword = ref('')
 const chapters = Object.keys(vocabulary)
@@ -20,10 +19,73 @@ const loaded = ref(false)
 const refVocabulary = reactive(vocabulary)
 
 const finishedList = ref([])
+// function finishTraining() {
+//   finishedList.value = [...flatDisplayWords.value] // ✅ 锁定当前范围
+//   isFinishTraining.value = true
+// }
 
 function finishTraining() {
-  finishedList.value = [...flatDisplayWords.value] // ✅ 锁定当前范围
+  const list = flatDisplayWords.value
+
+  let correct = 0
+  let error = 0
+
+  for (const item of list) {
+    const value = item.spellValue
+    if (!value) continue
+
+    const isCorrect = item.word
+      .map(v => v.toLowerCase().trim())
+      .includes(value)
+
+    item.spellError = !isCorrect
+
+    if (isCorrect) {
+      correct++
+    } else {
+      error++
+    }
+
+    updateProgress(item, isCorrect)
+  }
+
+  finishedList.value = [...list]
   isFinishTraining.value = true
+  isShowMeaning.value = true
+
+  // ✅ 记录逻辑（核心）
+  const cat = category.value
+
+  if (!trainingRecordsMap.value[cat]) {
+    trainingRecordsMap.value[cat] = []
+  }
+
+  trainingRecordsMap.value[cat].unshift({
+    time: Date.now(),
+    correct,
+    error
+  })
+
+  // ✅ 只保留最近10条
+  trainingRecordsMap.value[cat] =
+    trainingRecordsMap.value[cat].slice(0, 10)
+
+  localStorage.setItem(
+    RECORD_KEY,
+    JSON.stringify(trainingRecordsMap.value)
+  )
+
+  trainingStats.value = calcStats()
+
+
+}
+
+function formatTime(ts) {
+  const d = new Date(ts)
+  const pad = n => n.toString().padStart(2, '0')
+
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 `
+    + `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 }
 
 watch(category, (newVal, oldVal) => {
@@ -32,15 +94,7 @@ watch(category, (newVal, oldVal) => {
 
   // ✅ 每次切换章节都初始化
   const words = refVocabulary[newVal].words
-  for (const group of words) {
-    for (const item of group) {
-      item.hiddenByCheck = false
-      item.markedRed = false
-      item.showExample = false
-      item.showExtra = false
-      item.showMeaning = false
-    }
-  }
+  resetTrainingState(words)
 
   nextTick(() => {
     applyProgressToItems(words)
@@ -55,6 +109,7 @@ function calcStats() {
   let error = 0
   let missing = 0
   let correct = 0
+
 
   if (isTrainingModel.value) {
 
@@ -75,7 +130,9 @@ function calcStats() {
     }
   }
 
-  return `${missing} 个未完成，${correct} 个正确，${error} 个错误`
+  const rate = ((correct / (correct + error)) * 100).toFixed(0)
+
+  return `${missing} 个未完成，${correct} 个正确，${error} 个错误  （正确率 ${ rate }%）`
 }
 
 onMounted(() => {
@@ -223,27 +280,27 @@ function onInputKeydown(e, item) {
     toggleHint(item)
   }
 
-  // ⬅️ 隐藏并跳下一个（也要改成全局！）
-  if (key === 'ArrowLeft') {
-    e.preventDefault()
-
-    item.hiddenByCheck = true
-
-    let nextIndex = currentIndex + 1
-
-    while (nextIndex < list.length) {
-      if (!list[nextIndex].hiddenByCheck) break
-      nextIndex++
-    }
-
-    const nextItem = list[nextIndex]
-
-    if (nextItem) {
-      setTimeout(() => {
-        document.getElementById(nextItem.id)?.focus()
-      }, 50)
-    }
-  }
+  // // ⬅️ 隐藏并跳下一个（也要改成全局！）
+  // if (key === 'ArrowLeft') {
+  //   e.preventDefault()
+  //
+  //   item.hiddenByCheck = true
+  //
+  //   let nextIndex = currentIndex + 1
+  //
+  //   while (nextIndex < list.length) {
+  //     if (!list[nextIndex].hiddenByCheck) break
+  //     nextIndex++
+  //   }
+  //
+  //   const nextItem = list[nextIndex]
+  //
+  //   if (nextItem) {
+  //     setTimeout(() => {
+  //       document.getElementById(nextItem.id)?.focus()
+  //     }, 50)
+  //   }
+  // }
 
   // ➡️ 取消隐藏
   if (key === 'ArrowRight') {
@@ -273,11 +330,11 @@ function onInputFoucsOut(e, item) {
   } else {
     item.spellValue = spellValue
 
-    const isCorrect = item.word.map(v => v.toLowerCase().trim()).includes(spellValue)
+    // const isCorrect = item.word.map(v => v.toLowerCase().trim()).includes(spellValue)
 
-    item.spellError = !isCorrect
-
-    updateProgress(item, isCorrect)   // ✅ 加这一行
+    // item.spellError = !isCorrect
+    //
+    // updateProgress(item, isCorrect)   // ✅ 加这一行
   }
   trainingStats.value = calcStats()
 }
@@ -399,14 +456,26 @@ const displayWords = computed(() => {
   return words
 })
 
-watch(isErrorTrainingMode, () => {
-  const words = refVocabulary[category.value].words
-
+function resetTrainingState(words) {
   for (const group of words) {
     for (const item of group) {
       item.hiddenByCheck = false
+      item.markedRed = false
+      item.showExample = false
+      item.showExtra = false
+      item.showMeaning = false
+      item.spellValue = ''
+      item.spellError = false
     }
   }
+
+  trainingStats.value = calcStats()
+}
+
+watch(isErrorTrainingMode, () => {
+  const words = refVocabulary[category.value].words
+
+  resetTrainingState(words)
 })
 
 watch(isTrainingModel, (val) => {
@@ -416,7 +485,7 @@ watch(isTrainingModel, (val) => {
 })
 
 function toggleHint(item) {
-  const isOpen =  item.showMeaning
+  const isOpen = item.showMeaning
 
   // 👉 统一开关
   item.showMeaning = !isOpen
@@ -436,6 +505,15 @@ watch(isErrorTrainingMode, () => {
   }
 })
 
+const RECORD_KEY = 'vocabulary_training_records_v2'
+
+const trainingRecordsMap = ref(
+  JSON.parse(localStorage.getItem(RECORD_KEY) || '{}')
+)
+
+const currentRecords = computed(() => {
+  return trainingRecordsMap.value[category.value] || []
+})
 </script>
 
 <template>
@@ -600,7 +678,7 @@ watch(isErrorTrainingMode, () => {
                           title="显示原词" @click.stop="toggleHint(item)"
                         />
                         <input
-                          :id="item.id" autocomplete="off"  :class="getInputStyleClass(item) + ' w-[100px]'"
+                          :id="item.id" autocomplete="off" :class="getInputStyleClass(item) + ' w-[100px]'"
                           type="text"
                           @focusout="onInputFoucsOut($event, item)"
                           @focusin="onInputFoucsIn($event, `vocabulary/audio/${category}/${item.word[0]}.mp3`)"
@@ -658,7 +736,7 @@ watch(isErrorTrainingMode, () => {
                     <td class="p-4">
                       {{
                         isTrainingModel
-                          ? ((isShowMeaning  || item.showMeaning ) ? item.meaning : '')
+                          ? ((isShowMeaning || item.showMeaning) ? item.meaning : '')
                           : item.meaning
                       }}
                     </td>
@@ -695,7 +773,7 @@ watch(isErrorTrainingMode, () => {
           <button
             type="button"
             class="rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-medium text-white dark:bg-blue-600 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-            @click.stop="isFinishTraining = true"
+            @click.stop="finishTraining"
           >
             完成练习
           </button>
@@ -713,6 +791,21 @@ watch(isErrorTrainingMode, () => {
           >
             拷贝错词
           </button>
+        </div>
+      </div>
+
+      <div v-if="currentRecords.length" class="mt-4 rounded-lg border p-3">
+        <div
+          v-for="(r, i) in currentRecords"
+          :key="i"
+          :class="[
+      'px-3 py-2 text-sm',
+      i % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+    ]"
+        >
+          {{ formatTime(r.time) }}
+          {{ r.correct }}个正确，
+          {{ r.error }}个错误
         </div>
       </div>
     </div>
